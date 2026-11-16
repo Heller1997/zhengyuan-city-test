@@ -1,0 +1,755 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" href="data:," />
+    <title>测一测，哪座城市藏着你的正缘？</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #54303c;
+        --ink-soft: #8a5a66;
+        --ink-faint: #b08a92;
+        --accent: #e75480;
+        --accent-2: #f27ba7;
+        --accent-strong: #d6336c;
+        --gold: #b8860b;
+        --gold-soft: #e8b64c;
+        --card: rgba(255, 255, 255, 0.94);
+        --card-2: rgba(255, 243, 238, 0.9);
+        --line: rgba(231, 84, 128, 0.28);
+        --track: rgba(231, 84, 128, 0.14);
+        --radius: 20px;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
+        color: var(--ink);
+        min-height: 100dvh;
+        -webkit-tap-highlight-color: transparent;
+        background:
+          radial-gradient(560px 380px at 12% -6%, rgba(242, 123, 167, 0.35), transparent 62%),
+          radial-gradient(640px 460px at 105% 22%, rgba(232, 182, 76, 0.32), transparent 60%),
+          radial-gradient(520px 420px at 50% 112%, rgba(231, 84, 128, 0.22), transparent 62%),
+          linear-gradient(165deg, #fff8f1 0%, #fdeef0 46%, #fdf3e3 100%);
+        background-attachment: fixed;
+        overflow-x: hidden;
+      }
+      /* 点阵纹理层 */
+      body::before {
+        content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+        background-image: radial-gradient(rgba(231, 84, 128, 0.12) 1.2px, transparent 1.3px);
+        background-size: 22px 22px;
+        mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
+        -webkit-mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
+      }
+      /* 漂浮光晕 */
+      .orb { position: fixed; border-radius: 50%; filter: blur(46px); pointer-events: none; z-index: 0; opacity: .55; }
+      .orb-1 { width: 230px; height: 230px; left: -70px; top: 16%; background: #f9a8c0; animation: drift 11s ease-in-out infinite alternate; }
+      .orb-2 { width: 180px; height: 180px; right: -60px; top: 58%; background: #f2c14e; opacity: .38; animation: drift 14s ease-in-out infinite alternate-reverse; }
+      @keyframes drift { from { transform: translateY(-16px); } to { transform: translateY(26px); } }
+
+      .wrap {
+        position: relative; z-index: 1;
+        max-width: 560px; margin: 0 auto;
+        padding: 22px 18px calc(30px + env(safe-area-inset-bottom));
+        min-height: 100dvh; display: flex; flex-direction: column;
+      }
+      .screen { display: none; flex: 1; flex-direction: column; }
+      .screen.active { display: flex; }
+
+      /* ---------- 通用卡片 ---------- */
+      .panel {
+        position: relative;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: 0 18px 40px rgba(150, 60, 90, 0.16), 0 0 0 1px rgba(255,255,255,.6), 0 0 32px rgba(242, 123, 167, 0.14);
+        backdrop-filter: blur(6px);
+      }
+      .panel::before {
+        content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+        background: linear-gradient(160deg, rgba(255,255,255,.7), transparent 34%);
+      }
+
+      .btn {
+        appearance: none; border: 0; cursor: pointer; font: inherit; font-weight: 800;
+        border-radius: 15px; min-height: 54px; padding: 12px 22px; position: relative; overflow: hidden;
+        transition: transform .08s ease, filter .15s ease;
+      }
+      .btn:active { transform: scale(.97); }
+      .btn-primary {
+        width: 100%; font-size: 17.5px; color: #fff; letter-spacing: 1px;
+        background: linear-gradient(120deg, #e75480, #ef7d9b 55%, #f27ba7);
+        box-shadow: 0 14px 30px rgba(231, 84, 128, 0.38), inset 0 1px 0 rgba(255,255,255,.45);
+      }
+      .btn-primary::after {
+        content: ""; position: absolute; top: 0; bottom: 0; width: 46px; left: -70px;
+        background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent);
+        transform: skewX(-18deg); animation: shine 2.8s ease-in-out infinite;
+      }
+      @keyframes shine { 0%, 55% { left: -70px; } 85%, 100% { left: 115%; } }
+      .btn-ghost {
+        background: var(--card-2); color: var(--ink); border: 1px solid var(--line); font-size: 15.5px;
+      }
+
+      /* ---------- 封面 ---------- */
+      .cover { justify-content: center; text-align: center; padding: 18px 0 6px; }
+      .cover-inner { padding: 34px 20px 28px; }
+      .duo { display: flex; justify-content: center; align-items: stretch; gap: 12px; margin-bottom: 28px; }
+      .duo .letter {
+        width: 112px; height: 142px; border-radius: 18px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        position: relative;
+      }
+      .duo .letter b { font-size: 62px; line-height: 1; font-weight: 900; }
+      .duo .letter span { margin-top: 10px; font-size: 13px; }
+      .duo .you {
+        color: #fff; transform: rotate(-2.5deg);
+        background: linear-gradient(150deg, #f27ba7, #e75480 60%, #d6336c);
+        border: 1px solid rgba(255, 209, 222, .7);
+        box-shadow: 0 16px 34px rgba(231, 84, 128, .4), 0 0 30px rgba(242, 123, 167, .35);
+        animation: bob 3.4s ease-in-out infinite;
+      }
+      .duo .you span { color: rgba(255,255,255,.9); }
+      .duo .ta {
+        color: var(--ink); transform: rotate(2.5deg);
+        background: linear-gradient(160deg, #fff6e8, #fdeecf);
+        border: 1px dashed rgba(184, 134, 11, .55);
+        box-shadow: 0 16px 34px rgba(150, 100, 20, .18), 0 0 26px rgba(232, 182, 76, .25);
+        animation: bob 3.4s ease-in-out .5s infinite;
+      }
+      .duo .ta span { color: var(--ink-soft); }
+      @keyframes bob { 0%, 100% { margin-top: 0; } 50% { margin-top: -7px; } }
+      .duo .heart {
+        align-self: center; font-size: 20px; font-weight: 900; color: #fff;
+        background: linear-gradient(140deg, #f2c14e, #e8b64c);
+        border-radius: 999px; padding: 8px 12px; z-index: 1;
+        box-shadow: 0 6px 16px rgba(232, 182, 76, .5);
+      }
+      h1 {
+        font-size: 32px; line-height: 1.3; margin: 0 0 12px; font-weight: 900; letter-spacing: 1px;
+        text-shadow: 0 2px 16px rgba(231, 84, 128, 0.25);
+      }
+      h1 .hl { color: var(--accent-strong); }
+      .subtitle { font-size: 16.5px; line-height: 1.7; color: var(--ink-soft); margin: 0 auto 24px; max-width: 21em; }
+      .meta-row { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 28px; }
+      .meta-row span {
+        font-size: 13px; color: var(--ink-soft);
+        border: 1px solid var(--line); background: rgba(255,255,255,.7);
+        border-radius: 999px; padding: 6px 12px;
+      }
+      .cover-note { margin-top: 18px; font-size: 13px; color: var(--ink-faint); line-height: 1.6; }
+
+      /* ---------- 题目页 ---------- */
+      .quiz-top { margin-bottom: 16px; }
+      .progress-meta { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+      .progress-meta .count { font-size: 15.5px; font-weight: 800; text-shadow: 0 1px 6px rgba(255,255,255,.8); }
+      .progress-meta .count em { font-style: normal; color: var(--accent-strong); font-size: 19px; }
+      .progress-meta .pct { font-size: 13px; color: var(--ink-soft); }
+      .track {
+        height: 10px; border-radius: 999px; background: var(--track); overflow: hidden;
+        border: 1px solid rgba(231, 84, 128, 0.18);
+        box-shadow: inset 0 2px 5px rgba(150, 60, 90, 0.12);
+      }
+      .track i {
+        display: block; height: 100%; width: 0; border-radius: 999px;
+        background: linear-gradient(90deg, #e75480, #f2c14e);
+        box-shadow: 0 0 12px rgba(242, 123, 167, .6);
+        position: relative; transition: width .35s ease;
+      }
+      .track i::after {
+        content: ""; position: absolute; inset: 0; border-radius: inherit;
+        background: repeating-linear-gradient(115deg, rgba(255,255,255,.3) 0 8px, transparent 8px 16px);
+        animation: slide 0.9s linear infinite;
+      }
+      @keyframes slide { to { transform: translateX(11px); } }
+      .qcard { padding: 24px 18px 20px; }
+      .qcard.enter { animation: qin .34s cubic-bezier(.2, .9, .3, 1.2); }
+      @keyframes qin { from { opacity: 0; transform: translateX(26px) scale(.985); } to { opacity: 1; transform: none; } }
+      .qnum {
+        display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: 2px; color: var(--gold);
+        border: 1px solid rgba(184, 134, 11, .45); border-radius: 999px; padding: 3px 10px; margin-bottom: 12px;
+        background: rgba(232, 182, 76, 0.12);
+      }
+      .qtext { font-size: 19.5px; line-height: 1.62; font-weight: 800; margin: 0 0 20px; }
+      .options { display: grid; gap: 11px; }
+      .opt {
+        appearance: none; cursor: pointer; text-align: left; font: inherit;
+        display: flex; align-items: center; gap: 12px; position: relative;
+        width: 100%; min-height: 58px; padding: 12px 14px;
+        background: rgba(255, 255, 255, 0.75); color: var(--ink);
+        border: 1.5px solid var(--line); border-radius: 15px;
+        font-size: 16px; line-height: 1.5;
+        transition: border-color .12s ease, background .12s ease, transform .1s ease;
+        animation: opin .3s ease both;
+      }
+      .opt:nth-child(2) { animation-delay: .05s; }
+      .opt:nth-child(3) { animation-delay: .1s; }
+      .opt:nth-child(4) { animation-delay: .15s; }
+      @keyframes opin { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: none; } }
+      .opt:hover { border-color: var(--accent-2); transform: translateY(-1px); }
+      .opt:active { transform: scale(.985); }
+      .opt .key {
+        flex: 0 0 auto; width: 29px; height: 29px; border-radius: 9px;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(231, 84, 128, 0.08); border: 1px solid var(--line);
+        font-size: 14px; font-weight: 800; color: var(--ink-soft);
+      }
+      .opt.picked {
+        background: linear-gradient(120deg, #e75480, #ef7d9b); border-color: #ffd1de; color: #fff;
+        box-shadow: 0 10px 24px rgba(231, 84, 128, 0.4), 0 0 18px rgba(242, 123, 167, 0.4);
+        animation: pop .32s cubic-bezier(.2, 1.4, .4, 1) both;
+      }
+      .opt.picked .key { background: rgba(255,255,255,.25); border-color: transparent; color: #fff; }
+      .opt.picked::after {
+        content: "✓"; position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+        font-weight: 900; font-size: 17px; color: #fff;
+      }
+      @keyframes pop { 0% { transform: scale(1); } 45% { transform: scale(1.045); } 100% { transform: scale(1.015); } }
+      .quiz-foot { margin-top: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+      .back-btn {
+        appearance: none; background: rgba(255,255,255,.7); border: 1px solid var(--line); border-radius: 999px;
+        cursor: pointer; font: inherit; color: var(--ink-soft); font-size: 14.5px; padding: 8px 14px; min-height: 44px;
+      }
+      .back-btn:disabled { opacity: .35; cursor: default; }
+      .hint { font-size: 12.5px; color: var(--ink-faint); }
+
+      /* ---------- 结果页 ---------- */
+      .result { padding-top: 8px; }
+      .result-card { padding: 30px 20px 24px; text-align: center; overflow: hidden; }
+      .result-card.reveal { animation: reveal .55s cubic-bezier(.2, 1.2, .3, 1) both; }
+      @keyframes reveal { from { opacity: 0; transform: scale(.9) translateY(16px); } to { opacity: 1; transform: none; } }
+      .score-line { font-size: 14px; color: var(--ink-soft); margin: 0 0 6px; }
+      .score-line b {
+        font-size: 30px; color: var(--accent-strong); font-weight: 900; padding: 0 3px;
+        text-shadow: 0 0 18px rgba(231, 84, 128, 0.3);
+      }
+      .result-pre { font-size: 14.5px; color: var(--ink-soft); margin: 0 0 2px; letter-spacing: 2px; }
+      .result-type {
+        font-size: 44px; font-weight: 900; margin: 0 0 8px; letter-spacing: 3px;
+        background: linear-gradient(100deg, #e75480, #d6336c 55%, #b8860b);
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+        filter: drop-shadow(0 3px 12px rgba(231, 84, 128, 0.3));
+      }
+      .result-tag { font-size: 17px; color: var(--gold); font-weight: 800; margin: 0 0 18px; }
+      .tags { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+      .tags span {
+        font-size: 13px; color: var(--accent-strong);
+        border: 1px solid rgba(231, 84, 128, 0.35); background: rgba(231, 84, 128, 0.07);
+        border-radius: 999px; padding: 5px 12px;
+      }
+      .spectrum { margin: 2px 2px 6px; text-align: left; }
+      .spectrum .bar { position: relative; height: 11px; border-radius: 999px; background: var(--track); box-shadow: inset 0 2px 5px rgba(150, 60, 90, 0.12); }
+      .spectrum .bar i {
+        position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 999px;
+        background: linear-gradient(90deg, #f27ba7, #f2c14e);
+        box-shadow: 0 0 12px rgba(242, 123, 167, 0.6);
+        transition: width 1s cubic-bezier(.2, .8, .2, 1) .25s;
+      }
+      .spectrum .bar .dot {
+        position: absolute; top: 50%; width: 21px; height: 21px; border-radius: 50%;
+        background: #fff8f1; border: 3px solid var(--gold);
+        transform: translate(-50%, -50%); left: 0;
+        box-shadow: 0 0 14px rgba(232, 182, 76, 0.7);
+        transition: left 1s cubic-bezier(.2, .8, .2, 1) .25s;
+      }
+      .spectrum .ends { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--ink-faint); margin-top: 9px; }
+      .spectrum .ends b { color: var(--ink-soft); }
+      .result-body { text-align: left; margin-top: 20px; }
+      .result-body h2 {
+        font-size: 12.5px; letter-spacing: 3px; color: var(--gold); margin: 20px 0 7px; font-weight: 800;
+        display: flex; align-items: center; gap: 10px;
+      }
+      .result-body h2::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(232,182,76,.5), transparent); }
+      .result-body h2:first-child { margin-top: 0; }
+      .result-body p { font-size: 16px; line-height: 1.78; margin: 0; }
+      .result-actions { display: grid; gap: 11px; margin-top: 22px; }
+      .copied { text-align: center; font-size: 13.5px; color: var(--accent-strong); min-height: 20px; margin-top: 10px; font-weight: 700; }
+      .share-line { text-align: center; font-size: 14.5px; color: var(--accent-strong); font-weight: 800; margin: 14px 0 0; line-height: 1.7; }
+      .foot-note { text-align: center; font-size: 12.5px; color: var(--ink-faint); margin-top: 16px; line-height: 1.7; }
+
+      /* ---------- 音乐开关 ---------- */
+      .music-btn {
+        position: fixed; top: calc(14px + env(safe-area-inset-top)); right: 14px; z-index: 20;
+        width: 46px; height: 46px; border-radius: 50%; cursor: pointer;
+        border: 1px solid var(--line); background: rgba(255, 255, 255, .9); color: var(--accent);
+        backdrop-filter: blur(6px); box-shadow: 0 8px 20px rgba(150, 60, 90, 0.18);
+        display: flex; align-items: center; justify-content: center;
+        transition: color .2s ease, border-color .2s ease, box-shadow .2s ease;
+      }
+      .music-btn svg { width: 21px; height: 21px; fill: currentColor; }
+      .music-btn::after {
+        content: ""; position: absolute; width: 27px; height: 2.5px; border-radius: 2px;
+        background: var(--accent-2); transform: rotate(-38deg);
+        box-shadow: 0 1px 5px rgba(0, 0, 0, .25);
+      }
+      .music-btn.playing { color: var(--gold); border-color: rgba(184, 134, 11, .6); box-shadow: 0 0 18px rgba(232, 182, 76, 0.4), 0 8px 20px rgba(150, 60, 90, 0.18); }
+      .music-btn.playing::after { display: none; }
+      .music-btn.playing svg { display: none; }
+      .music-btn .eq { display: none; align-items: flex-end; gap: 3px; height: 16px; }
+      .music-btn.playing .eq { display: flex; }
+      .music-btn .eq i { width: 3.5px; height: 100%; border-radius: 2px; background: var(--gold); transform-origin: bottom; animation: eqb .72s ease-in-out infinite; }
+      .music-btn .eq i:nth-child(2) { animation-delay: .18s; animation-duration: .58s; }
+      .music-btn .eq i:nth-child(3) { animation-delay: .36s; animation-duration: .82s; }
+      @keyframes eqb { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1); } }
+
+      /* 五彩纸屑 */
+      .confetti { position: fixed; inset: 0; pointer-events: none; z-index: 5; overflow: hidden; }
+      .confetti i {
+        position: absolute; top: -14px; width: 9px; height: 14px; border-radius: 2px;
+        animation: fall linear both;
+      }
+      @keyframes fall {
+        to { transform: translateY(105dvh) rotate(660deg); opacity: .9; }
+      }
+
+      @media (min-width: 640px) {
+        .wrap { padding-top: 42px; }
+        h1 { font-size: 38px; }
+        .qtext { font-size: 21px; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .orb, .duo .you, .duo .ta, .btn-primary::after, .track i::after, .music-btn .eq i { animation: none; }
+        .qcard.enter, .opt, .result-card.reveal { animation: none; }
+        .spectrum .bar i, .spectrum .bar .dot { transition: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="orb orb-1" aria-hidden="true"></div>
+    <div class="orb orb-2" aria-hidden="true"></div>
+    <div class="confetti" id="confetti" aria-hidden="true"></div>
+    <button class="music-btn playing" id="music-btn" type="button" aria-label="关闭音乐" aria-pressed="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 20.2a3.1 3.1 0 1 1-2-2.87V6.1c0-.42.28-.79.68-.93l9.5-2.85A1 1 0 0 1 19.5 3.3v12.03a3.1 3.1 0 1 1-2-2.86V5.62L10 7.86v12.34z"/></svg>
+      <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
+    </button>
+    <main class="wrap">
+
+      <!-- 封面 -->
+      <section class="screen cover active" id="screen-cover">
+        <div class="panel cover-inner">
+          <div class="duo" aria-hidden="true">
+            <div class="letter you"><b>你</b><span>在等一个人</span></div>
+            <div class="heart">♥</div>
+            <div class="letter ta"><b>TA</b><span>在某座城市</span></div>
+          </div>
+          <h1>测一测，哪座城市<br />藏着你的<span class="hl">正缘</span>？</h1>
+          <p class="subtitle">10 道题，测出你的正缘藏在哪座城市——他是什么样的人，你们会在哪里相遇。</p>
+          <div class="meta-row">
+            <span>共 10 题</span><span>约 1 分钟</span><span>凭第一直觉选</span>
+          </div>
+          <button class="btn btn-primary" id="btn-start" type="button">开始测试</button>
+          <p class="cover-note">娱乐向趣味测试，结果只在本机计算，不收集、不上传任何答案。<br />背景音乐默认开启，右上角按钮可随时开关。</p>
+        </div>
+      </section>
+
+      <!-- 题目 -->
+      <section class="screen" id="screen-quiz" aria-live="polite">
+        <div class="quiz-top">
+          <div class="progress-meta">
+            <span class="count">第 <em id="q-now">1</em> / 10 题</span>
+            <span class="pct" id="q-pct">10%</span>
+          </div>
+          <div class="track"><i id="q-bar"></i></div>
+        </div>
+        <div class="panel qcard" id="q-card">
+          <span class="qnum" id="q-num">QUESTION 01</span>
+          <p class="qtext" id="q-text"></p>
+          <div class="options" id="q-options"></div>
+        </div>
+        <div class="quiz-foot">
+          <button class="back-btn" id="btn-back" type="button">← 上一题</button>
+          <span class="hint">点选项自动进入下一题</span>
+        </div>
+      </section>
+
+      <!-- 结果 -->
+      <section class="screen result" id="screen-result">
+        <div class="panel result-card" id="result-card">
+          <p class="score-line">你的总分 <b id="r-score">0</b> / 40 分</p>
+          <p class="result-pre">你的正缘藏在</p>
+          <p class="result-type" id="r-type"></p>
+          <p class="result-tag" id="r-tag"></p>
+          <div class="tags" id="r-tags"></div>
+          <div class="spectrum">
+            <div class="bar"><i id="r-fill"></i><span class="dot" id="r-dot"></span></div>
+            <div class="ends"><span><b>温柔内敛</b> · 细水长流</span><span>热烈外向 · <b>轰轰烈烈</b></span></div>
+          </div>
+          <div class="result-body">
+            <h2>结果解读</h2>
+            <p id="r-desc"></p>
+            <h2>相遇场景</h2>
+            <p id="r-scene"></p>
+            <h2>幸运提示</h2>
+            <p id="r-tip"></p>
+          </div>
+        </div>
+        <div class="result-actions">
+          <button class="btn btn-primary" id="btn-copy" type="button">一键复制我的结果</button>
+          <button class="btn btn-ghost" id="btn-restart" type="button">重新测一次</button>
+        </div>
+        <p class="copied" id="copy-tip" role="status"></p>
+        <p class="share-line">测完去评论区对答案，看看谁和你同城同灵魂</p>
+        <p class="foot-note">本测试仅供娱乐，不构成任何心理或医学诊断。<br />把结果发给闺蜜对答案，往往比结果本身更有意思。</p>
+      </section>
+
+    </main>
+
+<script>
+// 分值：1 = 温柔内敛，4 = 热烈外向；总分越高，正缘越热烈
+var QUESTIONS = [
+{ q: "如果让你安排一场约会，你最想去哪种地方？", o: [["安静的书店或咖啡馆，两个人慢慢聊", 1], ["热闹的夜市，一路吃一路笑", 3], ["江边或公园散步，看夕阳慢慢落下", 2], ["说走就走，爬山看日出或去海边追浪", 4]]},
+{ q: "吵架之后，你最希望对方怎么哄你？", o: [["带你去吃顿好的，用美食把气消了", 3], ["安静地抱住你，什么都不用说", 1], ["直接拉你出门，玩到开心为止", 4], ["慢慢讲道理，把心结一点点解开", 2]]},
+{ q: "你最喜欢哪种天气？", o: [["阳光明媚，晒得人暖洋洋的", 3], ["细雨绵绵，适合躲在屋里看书", 1], ["蓝天白云大风天，适合出门撒欢", 4], ["阴天微凉，空气里有一点点潮意", 2]]},
+{ q: "理想的周末，你会怎么过？", o: [["背上包就出发，去个没去过的地方", 4], ["宅在家里，追剧、看书、睡到自然醒", 1], ["泡个温泉或做个手作，慢悠悠地过", 2], ["约上朋友，吃火锅、逛街、唱K", 3]]},
+{ q: "旅行的时候，你更喜欢哪种节奏？", o: [["吃吃喝喝，把当地的味道都尝一遍", 3], ["提前做好攻略，一个景点慢慢逛", 1], ["行程排得满满的，一天玩够本", 4], ["随性一点，走到哪玩到哪", 2]]},
+{ q: "你希望对方怎么表达对你的喜欢？", o: [["大大方方地秀恩爱，让全世界都知道", 4], ["默默记住你的小习惯，细节里见真心", 1], ["写小纸条、发长消息，温柔又细腻", 2], ["天天给你带好吃的，把你喂得饱饱的", 3]]},
+{ q: "恋爱里，什么最让你觉得被爱？", o: [["会为了你，临时改掉所有计划", 4], ["他记得你随口提过的小事", 1], ["难过的时候，他总能第一时间出现", 2], ["再忙也会陪你吃饭、陪你聊天", 3]]},
+{ q: "你希望你们的第一次见面，发生在什么样的场景？", o: [["火锅店或夜市，一起抢最后一口", 3], ["图书馆或书店，安静地擦肩而过", 1], ["演唱会或音乐节，人群里一眼看到你", 4], ["雨天，他把伞往你这边倾斜", 2]]},
+{ q: "你觉得一段感情里，最重要的是什么？", o: [["随时随地的激情与新鲜感", 4], ["细水长流的陪伴", 1], ["彼此都懂的默契", 2], ["一起吃喝玩乐的快乐", 3]]},
+{ q: "如果让你用一种感觉，形容你想要的爱情？", o: [["像一顿火锅，热热闹闹才够味", 3], ["像一杯温茶，越品越暖", 1], ["像一场烟花，绚烂得让人心跳加速", 4], ["像一场春雨，润物细无声", 2]]}
+];
+
+var RESULTS = [
+{ max: 12, city: "苏州", type: "温柔治愈型", tags: ["温柔治愈", "细水长流", "园林之约"], desc: "你的正缘温柔细腻，像苏州园林里的流水，不急不躁。他会在你最需要的时候出现，用耐心和细心把你照顾得妥妥帖帖，和他在一起，你会觉得日子都变慢了。", scene: "一个雨后的午后，在平江路的茶馆或园林里，你们因为同一本书、同一首评弹聊了起来。", tip: "多去有水有花的地方走走，缘分最喜欢安静的人。"},
+{ max: 15, city: "杭州", type: "烟雨知己型", tags: ["烟雨浪漫", "懂你的人", "西湖之约"], desc: "你的正缘懂你的慢热，也懂你的浪漫。他像西湖的烟雨，朦胧又温柔，从不逼你表态，却总在你身后。你们之间不用说太多，一个眼神就够了。", scene: "烟雨朦胧的傍晚，在西湖边或一家小店里，他帮你撑了一把伞。", tip: "雨天别总宅着，你的缘分就藏在雨里。"},
+{ max: 18, city: "广州", type: "烟火气暖心型", tags: ["烟火气", "踏实暖心", "早茶之约"], desc: "你的正缘真实又踏实，像广州的早茶一样热气腾腾。他不会说太多甜言蜜语，但会把你的喜好都记在心里，用一餐一饭把日子过得有滋有味。", scene: "清晨的茶楼里，你们拼了一张桌，他把最后一只虾饺让给了你。", tip: "别拒绝拼桌和搭讪，好运就藏在烟火气里。"},
+{ max: 21, city: "成都", type: "慢生活甜蜜型", tags: ["松弛感", "甜蜜日常", "火锅之约"], desc: "你的正缘自带松弛感，和他在一起，连吵架都吵不起来。他会陪你吃火锅、晒太阳，把平凡的日子过成诗，让你觉得生活本来就该这么甜。", scene: "宽窄巷子的茶馆，或是一家火锅店里，他笑着问你要不要拼桌。", tip: "慢一点，缘分最喜欢不着急的人。"},
+{ max: 24, city: "厦门", type: "海风清新型", tags: ["清新治愈", "海风少年", "岛屿之约"], desc: "你的正缘干净清爽，像厦门的海风。他说话不急不缓，笑起来很治愈，和他在一起，你会觉得整个世界都安静了下来，只剩下海浪声。", scene: "鼓浪屿的海边小路上，你们为了同一只猫停下了脚步。", tip: "多去海边走走，海风会把他吹到你身边。"},
+{ max: 27, city: "重庆", type: "热烈直球型", tags: ["热情直球", "山城恋人", "轻轨之约"], desc: "你的正缘热情直接，像重庆的火锅一样滚烫。喜欢就是喜欢，他从不拐弯抹角，会带着你穿过轻轨、爬上山城，把日子过得轰轰烈烈。", scene: "轻轨穿楼而过的时候，你们在同一个车厢里对视了一眼。", tip: "别躲着太热情的人，你的缘分就是热烈的。"},
+{ max: 30, city: "上海", type: "精致浪漫型", tags: ["精致浪漫", "仪式感", "外滩之约"], desc: "你的正缘精致又有品味，像上海的梧桐路一样有格调。他会记得所有纪念日，约会永远有惊喜，和他在一起，你会被宠成小公主。", scene: "外滩的夜色里，或是梧桐树下的咖啡馆，他为你留了一盏灯。", tip: "打扮得美美的出门，你的缘分认得出你。"},
+{ max: 33, city: "大理", type: "自由灵魂型", tags: ["自由灵魂", "诗与远方", "洱海之约"], desc: "你的正缘是个自由的灵魂，像大理的风花雪月一样浪漫不羁。他会带你看洱海的日落、听民谣，和他在一起，日子永远有诗和远方。", scene: "洱海边的民宿，或是一场民谣演出上，你们因为一首歌聊到了天亮。", tip: "偶尔出走一次，你的缘分在路上等你。"},
+{ max: 36, city: "北京", type: "深情靠谱型", tags: ["大气靠谱", "深情专一", "胡同之约"], desc: "你的正缘大气靠谱，像北京的胡同一样有底气。他话不多，但每句都算数，会陪你走过四季，把承诺一一兑现，是可以一起走很远的人。", scene: "故宫的红墙下，或是胡同里的一家小馆，你们因为一张老照片聊了起来。", tip: "别急着拒绝慢热的人，靠谱的缘分需要时间。"},
+{ max: 40, city: "拉萨", type: "命中注定型", tags: ["命中注定", "璀璨星空", "高原之约"], desc: "你的正缘是命中注定的那个人，像拉萨的星空一样璀璨难得。你们的相遇会像一场奇迹，他会陪你走过高原、看过星空，把一生过成朝圣。", scene: "布达拉宫前的广场，或是纳木错的湖边，你们在同一片星空下许了愿。", tip: "勇敢一点，命中注定的缘分，值得你翻山越岭。"}
+];
+
+var KEYS = ["A", "B", "C", "D"];
+var answers = [];
+var current = 0;
+var locked = false;
+var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+var screens = {
+cover: document.getElementById("screen-cover"),
+quiz: document.getElementById("screen-quiz"),
+result: document.getElementById("screen-result")
+};
+var elNow = document.getElementById("q-now");
+var elPct = document.getElementById("q-pct");
+var elBar = document.getElementById("q-bar");
+var elNum = document.getElementById("q-num");
+var elText = document.getElementById("q-text");
+var elOpts = document.getElementById("q-options");
+var elCard = document.getElementById("q-card");
+var btnBack = document.getElementById("btn-back");
+
+function show(name) {
+for (var k in screens) screens[k].classList.toggle("active", k === name);
+window.scrollTo(0, 0);
+}
+
+function renderQuestion() {
+locked = false;
+var item = QUESTIONS[current];
+elNow.textContent = current + 1;
+var pct = Math.round(((current + 1) / QUESTIONS.length) * 100);
+elPct.textContent = pct + "%";
+elBar.style.width = pct + "%";
+elNum.textContent = "QUESTION " + (current + 1 < 10 ? "0" : "") + (current + 1);
+elText.textContent = item.q;
+elOpts.innerHTML = "";
+item.o.forEach(function (opt, i) {
+var b = document.createElement("button");
+b.type = "button";
+b.className = "opt";
+var key = document.createElement("span");
+key.className = "key";
+key.textContent = KEYS[i];
+var label = document.createElement("span");
+label.textContent = opt[0];
+b.appendChild(key);
+b.appendChild(label);
+if (answers[current] === opt[1]) b.classList.add("picked");
+b.addEventListener("click", function () { pick(b, opt[1]); });
+elOpts.appendChild(b);
+});
+btnBack.disabled = current === 0;
+elCard.classList.remove("enter");
+void elCard.offsetWidth;
+elCard.classList.add("enter");
+}
+
+function pick(btn, score) {
+if (locked) return;
+locked = true;
+answers[current] = score;
+var opts = elOpts.querySelectorAll(".opt");
+for (var i = 0; i < opts.length; i++) opts[i].classList.remove("picked");
+btn.classList.add("picked");
+blip();
+if (navigator.vibrate) { try { navigator.vibrate(12); } catch (e) {} }
+setTimeout(function () {
+if (current < QUESTIONS.length - 1) {
+current++;
+renderQuestion();
+} else {
+showResult();
+}
+}, 340);
+}
+
+function resultFor(score) {
+for (var i = 0; i < RESULTS.length; i++) {
+if (score <= RESULTS[i].max) return RESULTS[i];
+}
+return RESULTS[RESULTS.length - 1];
+}
+
+var lastResultText = "";
+
+function confettiBurst() {
+if (reduced) return;
+var box = document.getElementById("confetti");
+var colors = ["#e75480", "#f27ba7", "#f2c14e", "#ffd1de", "#f5a623"];
+for (var i = 0; i < 42; i++) {
+var p = document.createElement("i");
+p.style.left = (Math.random() * 100) + "%";
+p.style.background = colors[i % colors.length];
+p.style.animationDuration = (1.6 + Math.random() * 1.6) + "s";
+p.style.animationDelay = (Math.random() * 0.35) + "s";
+p.style.transform = "rotate(" + Math.floor(Math.random() * 360) + "deg)";
+if (i % 3 === 0) p.style.borderRadius = "50%";
+box.appendChild(p);
+}
+setTimeout(function () { box.innerHTML = ""; }, 4200);
+}
+
+function countUp(el, target) {
+if (reduced) { el.textContent = target; return; }
+var start = null;
+function step(ts) {
+if (!start) start = ts;
+var t = Math.min((ts - start) / 900, 1);
+el.textContent = Math.round(target * (1 - Math.pow(1 - t, 3)));
+if (t < 1) requestAnimationFrame(step);
+}
+requestAnimationFrame(step);
+}
+
+function showResult() {
+var score = 0;
+for (var i = 0; i < answers.length; i++) score += answers[i] || 0;
+var r = resultFor(score);
+var scoreEl = document.getElementById("r-score");
+document.getElementById("r-type").textContent = r.city;
+document.getElementById("r-tag").textContent = "“" + r.type + "”";
+document.getElementById("r-desc").textContent = r.desc;
+document.getElementById("r-scene").textContent = r.scene;
+document.getElementById("r-tip").textContent = r.tip;
+var tagsEl = document.getElementById("r-tags");
+tagsEl.innerHTML = "";
+r.tags.forEach(function (t) {
+var s = document.createElement("span");
+s.textContent = t;
+tagsEl.appendChild(s);
+});
+document.getElementById("copy-tip").textContent = "";
+var fill = document.getElementById("r-fill");
+var dot = document.getElementById("r-dot");
+fill.style.width = "0%";
+dot.style.left = "0%";
+lastResultText = "我的正缘藏在" + r.city + "（" + score + " 分）——" + r.type + "。" + r.desc + " 相遇场景：" + r.scene + " 幸运提示：" + r.tip + " 测完去评论区对答案，看看谁和你同城同灵魂。";
+show("result");
+var card = document.getElementById("result-card");
+card.classList.remove("reveal");
+void card.offsetWidth;
+card.classList.add("reveal");
+countUp(scoreEl, score);
+var pos = ((score - 10) / 30) * 100;
+requestAnimationFrame(function () {
+requestAnimationFrame(function () {
+fill.style.width = pos + "%";
+dot.style.left = pos + "%";
+});
+});
+confettiBurst();
+fanfare();
+}
+
+// ---------- 背景音乐：Web Audio 现场合成，无外部音频文件，国内网络直接播放 ----------
+// 柔和浪漫进行：C – Am – F – G，92 BPM 八分音符步进
+var audioCtx = null, masterGain = null, musicTimer = null, noiseBuf = null;
+var soundOn = true, musicStarted = false;
+var musicBtn = document.getElementById("music-btn");
+
+function ensureAudio() {
+if (audioCtx) return true;
+var AC = window.AudioContext || window.webkitAudioContext;
+if (!AC) return false;
+try { audioCtx = new AC(); } catch (e) { return false; }
+masterGain = audioCtx.createGain();
+masterGain.gain.value = 0;
+masterGain.connect(audioCtx.destination);
+return true;
+}
+function midiHz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+function playTone(midi, t, dur, type, vol, when) {
+var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+o.type = type;
+o.frequency.value = midiHz(midi);
+g.gain.setValueAtTime(0.0001, t);
+g.gain.linearRampToValueAtTime(vol, t + 0.02);
+g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+o.connect(g);
+g.connect(when || masterGain);
+o.start(t);
+o.stop(t + dur + 0.05);
+}
+function playHat(t) {
+if (!noiseBuf) {
+noiseBuf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.05), audioCtx.sampleRate);
+var d = noiseBuf.getChannelData(0);
+for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+}
+var src = audioCtx.createBufferSource();
+src.buffer = noiseBuf;
+var f = audioCtx.createBiquadFilter();
+f.type = "highpass";
+f.frequency.value = 7200;
+var g = audioCtx.createGain();
+g.gain.setValueAtTime(0.03, t);
+g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+src.connect(f);
+f.connect(g);
+g.connect(masterGain);
+src.start(t);
+src.stop(t + 0.06);
+}
+
+var STEP_LEN = 60 / 92 / 2;
+var CHORDS = [[48, 55, 60, 64], [45, 57, 60, 64], [41, 53, 57, 60], [43, 55, 59, 62]];
+var ARP_IDX = [1, 2, 3, 2, 1, 3, 2, 3];
+var stepIdx = 0, nextTime = 0;
+
+function scheduleStep(s, t) {
+var chord = CHORDS[Math.floor(s / 8) % CHORDS.length];
+var pos = s % 8;
+if (pos === 0 || pos === 4) playTone(chord[0], t, 0.55, "sine", 0.45);
+if (pos === 6) playTone(chord[0] + 7, t, 0.3, "sine", 0.18);
+var tone = chord[ARP_IDX[pos]] + (pos === 3 || pos === 6 ? 12 : 0);
+playTone(tone, t, 0.34, "triangle", 0.26);
+if (pos % 2 === 0) playHat(t);
+}
+function scheduler() {
+while (nextTime < audioCtx.currentTime + 0.25) {
+scheduleStep(stepIdx, nextTime);
+nextTime += STEP_LEN;
+stepIdx++;
+}
+}
+function setSound(on) {
+soundOn = on;
+if (audioCtx && masterGain) {
+var t = audioCtx.currentTime;
+masterGain.gain.cancelScheduledValues(t);
+masterGain.gain.setValueAtTime(masterGain.gain.value, t);
+masterGain.gain.linearRampToValueAtTime(on ? 0.11 : 0, t + 0.4);
+}
+musicBtn.classList.toggle("playing", on);
+musicBtn.setAttribute("aria-pressed", on ? "true" : "false");
+musicBtn.setAttribute("aria-label", on ? "关闭音乐" : "打开音乐");
+}
+function startMusic() {
+if (!ensureAudio()) return;
+if (audioCtx.state === "suspended") { try { audioCtx.resume(); } catch (e) {} }
+if (!musicStarted) {
+musicStarted = true;
+stepIdx = 0;
+nextTime = audioCtx.currentTime + 0.08;
+musicTimer = setInterval(scheduler, 90);
+}
+setSound(soundOn);
+}
+musicBtn.addEventListener("click", function () {
+if (!musicStarted) startMusic();
+else setSound(!soundOn);
+});
+// 音乐默认开启：加载即启动合成；浏览器在首次交互前会挂起音频，首次点触任意处自动续播
+startMusic();
+function wakeAudio() {
+if (!audioCtx) return;
+if (audioCtx.state === "suspended") { try { audioCtx.resume(); } catch (e) {} }
+if (soundOn) setSound(true);
+}
+document.addEventListener("pointerdown", wakeAudio, true);
+document.addEventListener("touchstart", wakeAudio, true);
+function blip() {
+if (!soundOn || !audioCtx) return;
+var t = audioCtx.currentTime;
+playTone(76, t, 0.14, "sine", 0.18);
+playTone(83, t + 0.06, 0.18, "sine", 0.14);
+}
+function fanfare() {
+if (!soundOn || !audioCtx) return;
+var t = audioCtx.currentTime;
+var notes = [72, 76, 79, 84];
+for (var i = 0; i < notes.length; i++) playTone(notes[i], t + i * 0.11, 0.42, "triangle", 0.24);
+}
+
+document.getElementById("btn-start").addEventListener("click", function () {
+startMusic();
+answers = [];
+current = 0;
+show("quiz");
+renderQuestion();
+});
+
+btnBack.addEventListener("click", function () {
+if (current > 0 && !locked) {
+current--;
+renderQuestion();
+}
+});
+
+document.getElementById("btn-restart").addEventListener("click", function () {
+answers = [];
+current = 0;
+show("cover");
+});
+
+document.getElementById("btn-copy").addEventListener("click", function () {
+var tip = document.getElementById("copy-tip");
+function done() { tip.textContent = "已复制，去粘贴分享给朋友吧。"; }
+function fallback() {
+var ta = document.createElement("textarea");
+ta.value = lastResultText;
+ta.style.position = "fixed";
+ta.style.opacity = "0";
+document.body.appendChild(ta);
+ta.select();
+try { document.execCommand("copy"); done(); }
+catch (e) { tip.textContent = "复制失败，长按结果文字手动复制吧。"; }
+document.body.removeChild(ta);
+}
+if (navigator.clipboard && navigator.clipboard.writeText) {
+navigator.clipboard.writeText(lastResultText).then(done, fallback);
+} else {
+fallback();
+}
+});
+
+document.addEventListener("keydown", function (e) {
+if (!screens.quiz.classList.contains("active")) return;
+var n = parseInt(e.key, 10);
+if (n >= 1 && n <= 4) {
+var btn = elOpts.querySelectorAll(".opt")[n - 1];
+if (btn) btn.click();
+}
+});
+</script>
+</body>
+</html>
