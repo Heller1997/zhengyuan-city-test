@@ -267,6 +267,7 @@
       .result-body h2::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(232,182,76,.5), transparent); }
       .result-body h2:first-child { margin-top: 0; }
       .result-body p { font-size: 16px; line-height: 1.78; margin: 0; }
+      .warm-close { text-align: center; font-size: 16.5px; line-height: 1.7; color: var(--accent-strong); font-weight: 800; margin: 22px 0 2px; }
       .result-actions { display: grid; gap: 11px; margin-top: 22px; }
       .copied { text-align: center; font-size: 13.5px; color: var(--accent-strong); min-height: 20px; margin-top: 10px; font-weight: 700; }
       .share-line { text-align: center; font-size: 14.5px; color: var(--accent-strong); font-weight: 800; margin: 14px 0 0; line-height: 1.7; }
@@ -387,14 +388,15 @@
             <h2>幸运提示</h2>
             <p id="r-tip"></p>
           </div>
+          <p class="warm-close">别急，你的正缘正在赶来的路上。</p>
         </div>
         <div class="result-actions">
-          <button class="btn btn-primary" id="btn-copy" type="button">一键复制我的结果</button>
+          <button class="btn btn-primary" id="btn-copy" type="button">复制结果 · 发给闺蜜</button>
           <button class="btn btn-ghost" id="btn-restart" type="button">重新测一次</button>
         </div>
         <p class="copied" id="copy-tip" role="status"></p>
-        <p class="share-line">测完去评论区对答案，看看谁和你同城同灵魂</p>
-        <p class="foot-note">本测试仅供娱乐，不构成任何心理或医学诊断。<br />把结果发给闺蜜对答案，往往比结果本身更有意思。</p>
+        <p class="share-line">截图这张结果发给闺蜜，看看她的正缘在哪座城市</p>
+        <p class="foot-note">本测试仅供娱乐，不构成任何心理或医学诊断。<br />测完去评论区对答案，看看谁和你同城同灵魂。</p>
       </section>
 
     </main>
@@ -562,7 +564,7 @@ var fill = document.getElementById("r-fill");
 var dot = document.getElementById("r-dot");
 fill.style.width = "0%";
 dot.style.left = "0%";
-lastResultText = "我的正缘藏在" + r.city + "（" + score + " 分）——" + r.type + "。" + r.desc + " 相遇场景：" + r.scene + " 幸运提示：" + r.tip + " 测完去评论区对答案，看看谁和你同城同灵魂。";
+lastResultText = "我刚测了「哪座城市藏着你的正缘」：我的正缘藏在" + r.city + "，" + r.type + "。" + r.desc + " 相遇场景：" + r.scene + " 别急，你的正缘正在赶来的路上。你也来测测，你的正缘在哪座城市？";
 show("result");
 var card = document.getElementById("result-card");
 card.classList.remove("reveal");
